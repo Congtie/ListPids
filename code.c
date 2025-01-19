@@ -9,7 +9,6 @@
     #define MAX_RESOURCE_TYPES 3
     #define INITIAL_RESOURCES 2
     
-    // Date private ale monitorului
     typedef struct {
         int available;
         int max_available;
@@ -17,19 +16,15 @@
     } Resource;
     
     typedef struct {
-        // Date private
         Resource resources[MAX_RESOURCE_TYPES];
         int waiting_threads;
     
-        // Mecanism de sincronizare
         pthread_mutex_t mutex;
         pthread_cond_t can_allocate;
     
-        // Statistici
         int total_operations;
     } Monitor;
     
-    // Inițializarea monitorului
     void monitor_init(Monitor* m) {
         pthread_mutex_init(&m->mutex, NULL);
         pthread_cond_init(&m->can_allocate, NULL);
@@ -99,7 +94,6 @@
         pthread_mutex_unlock(&m->mutex);
     }
     
-    // Funcție pentru afișare stare monitor
     void monitor_status(Monitor* m) {
         pthread_mutex_lock(&m->mutex);
     
@@ -122,23 +116,20 @@
         Monitor* m = (Monitor*)((void**)arg)[1];
     
         while (1) {
-            // Studentul alege aleator resursele de care are nevoie
             int resource = rand() % MAX_RESOURCE_TYPES;
-            int amount = 1; // De obicei, un student folosește o singură resursă
+            int amount = 1; 
     
             printf("Student %d încearcă să folosească un %s\n",
                    student_id, m->resources[resource].name);
     
             monitor_request(m, student_id, resource, amount);
     
-            // Simulează utilizarea resursei
             printf("Student %d folosește %s\n",
                    student_id, m->resources[resource].name);
             sleep(rand() % 3 + 1);
     
             monitor_release(m, student_id, resource, amount);
     
-            // Pauză între utilizări
             sleep(rand() % 2 + 1);
         }
         return NULL;
@@ -152,7 +143,6 @@
         srand(time(NULL));
         monitor_init(&monitor);
     
-        // Creare thread-uri pentru studenți
         for (int i = 0; i < MAX_STUDENTS; i++) {
             student_ids[i] = i + 1;
             void** args = malloc(2 * sizeof(void*));
@@ -161,7 +151,6 @@
             pthread_create(&threads[i], NULL, student, args);
         }
     
-        // Testare modificări dinamice
         monitor_status(&monitor);
         sleep(5);
     
@@ -180,13 +169,11 @@
         monitor_status(&monitor);
         sleep(5);
     
-            // Cleanup
         for (int i = 0; i < MAX_STUDENTS; i++) {
-            pthread_cancel(threads[i]);  // Oprirea thread-urilor studenților
-            pthread_join(threads[i], NULL);  // Așteaptă finalizarea thread-urilor
+            pthread_cancel(threads[i]);
+            pthread_join(threads[i], NULL);
         }
     
-        // Distruge mutex-ul și condițiile pentru a elibera resursele
         pthread_mutex_destroy(&monitor.mutex);
         pthread_cond_destroy(&monitor.can_allocate);
     
